@@ -1,12 +1,8 @@
-import logging
 import os
 import sys
-import threading
-import time
-import tkinter.scrolledtext as ScrolledText
+from pathlib import Path
 from tkinter import *
 from tkinter import filedialog
-import pandas as pd
 
 import utils as util
 
@@ -16,14 +12,9 @@ class ReadFileApp:
         # Initialize tkinter window with dimensions 300 x 300
         self.excel_file_name = None
         self.labfoldername = None
-        self.lake_mean = None
         self.lake_std = None
+        self.lake_mean = None
         self.lakefoldername = None
-        self.file_path = None
-        self.predicted_df = None
-        self.foldername = None
-        self.GT_renamed_df = None
-        self.filename = None
         master.geometry('400x300')
 
         master.title('Compare model performances with GT')
@@ -43,9 +34,9 @@ class ReadFileApp:
                                                             "characteristics")
         self.lake_mean, self.lake_std = util.get_lake_color_characteristics(self.lakefoldername)
         self.labfoldername = filedialog.askdirectory(title="Select main folder of lab images for doing color transfer")
-        util.color_transfer_on_image_list(self.labfoldername, self.lake_mean, self.lake_std, None)
-
-        # self.GT_renamed_df = util.read_excel_filename(self.filename)
+        new_folder_path = Path.cwd() / "lab_color_transfered_out"
+        new_folder_path.mkdir(exist_ok=True)
+        util.color_transfer_on_image_list(self.labfoldername, self.lake_mean, self.lake_std, new_folder_path)
 
     def UploadLakeExcel(self):
         self.excel_file_name = filedialog.askopenfilename(title="Select the excel sheet  containing lake image "
@@ -55,31 +46,11 @@ class ReadFileApp:
         self.lake_mean, self.lake_std = util.load_lake_color_characteristics(self.excel_file_name)
         self.labfoldername = filedialog.askdirectory(title="Select main folder of lab images for doing color transfer")
         util.color_transfer_on_image_list(self.labfoldername, self.lake_mean, self.lake_std, None)
-        #
-        # print('Selected:', self.filename)
-        # print('Selected:', self.foldername)
-
-    # def gen_report_function(self):
-    #     print('')
-    #     # util.perform_statistics(self.file_path, self.foldername, self.GT_renamed_df, self.predicted_df)
-    #
-
-
-def worker():
-    # Skeleton worker function, runs in separate thread (see below)
-    while True:
-        # Report time / date at 2-second intervals
-        time.sleep(2)
-        timeStr = time.asctime()
-        msg = 'Current time: ' + timeStr
-        logging.info(msg)
 
 
 def main():
     main = Tk()
     ReadFileApp(main)
-    t1 = threading.Thread(target=worker, args=[])
-    t1.start()
     main.mainloop()
 
 

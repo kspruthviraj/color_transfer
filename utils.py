@@ -1,13 +1,10 @@
 import os
-import numpy as np
-from skimage import color, exposure, io, transform
-import matplotlib.pyplot as plt
-import os
-import random
-import pandas as pd
 
-import os
+import imageio
+import numpy as np
 import pandas as pd
+import skimage
+from skimage import color, io
 
 
 def get_image_list(root_path):
@@ -18,19 +15,6 @@ def get_image_list(root_path):
                 image_list.append(os.path.join(root, filename))
     return image_list
 
-
-# def get_lake_color_characterstics(lakecam_images_path):
-#     # Get lists of image file paths
-#     lakecam_image_list = get_image_list(lakecam_images_path)
-#
-#     # Load the set of images taken from the lake camera
-#     lake_images = [io.imread(image_path) for image_path in lakecam_image_list]
-#
-#     # Calculate the mean and standard deviation of each channel in LAB color space for the lake images
-#     lake_mean = np.mean([color.rgb2lab(img).mean(axis=(0, 1)) for img in lake_images], axis=0)
-#     lake_std = np.mean([color.rgb2lab(img).std(axis=(0, 1)) for img in lake_images], axis=0)
-#
-#     return lake_mean, lake_std
 
 def get_lake_color_characteristics(lakecam_images_path):
     # Get lists of image file paths
@@ -51,7 +35,8 @@ def get_lake_color_characteristics(lakecam_images_path):
     excel_file_path = os.path.join(current_directory, 'lake_color_characteristics.xlsx')
 
     # Write the DataFrame to an Excel file with headers
-    df.to_excel(excel_file_path, index=False, header=['lake_mean', 'lake_std'], mode='w')
+    # df.to_excel(excel_file_path, index=False, header=['lake_mean', 'lake_std'], mode='w')
+    df.to_excel(excel_file_path, index=False, header=['lake_mean', 'lake_std'])
 
     return lake_mean, lake_std
 
@@ -87,16 +72,18 @@ def color_transfer_on_image(lab_image, lake_mean, lake_std):
     return img_transfer
 
 
-def color_transfer_on_image_list(input_directory, lake_mean, lake_std, output_directory):
+def color_transfer_on_image_list(labcam_images_path, lake_mean, lake_std, output_directory):
+
+    # Get lists of image file paths
+    labcam_image_list = get_image_list(labcam_images_path)
+
     # Create the output directory if it doesn't exist
     os.makedirs(output_directory, exist_ok=True)
 
     # Iterate over all the LAB images in the input directory
-    for filename in os.listdir(input_directory):
-        if not filename.endswith('.jpg'):
-            continue
+    for lab_image_path in labcam_image_list:
+
         # Load the LAB image
-        lab_image_path = os.path.join(input_directory, filename)
         lab_image = io.imread(lab_image_path)
 
         # Calculate the mean and standard deviation of each channel in LAB color space for the input lab image
@@ -107,9 +94,20 @@ def color_transfer_on_image_list(input_directory, lake_mean, lake_std, output_di
         a = (lake_std / lab_std) * (color.rgb2lab(lab_image) - lab_mean) + lake_mean
         img_transfer = color.lab2rgb(a)
 
+        # Get the file name from the lab_image_path
+        filename = os.path.basename(lab_image_path)
+
         # Save the result as a JPEG image in the output directory
         output_path = os.path.join(output_directory, filename)
-        io.imsave(output_path, img_transfer, quality=95)
+        os.makedirs(output_directory, exist_ok=True)
+
+        # Convert the image to uint8
+        img_uint8 = skimage.img_as_ubyte(img_transfer)
+
+        # Save the uint8 image
+        imageio.imwrite(output_path, img_uint8)
+
+        # io.imsave(output_path, img_transfer, quality=95)
 
     return
 
