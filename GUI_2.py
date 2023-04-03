@@ -91,19 +91,15 @@ class ColorTransferApp:
             pb.start()
 
             for image_path in image_paths:
-                # original_lab_image = Image.open(image_path).convert('LAB')
-                original_lab_image = io.imread(image_path)
                 new_folder_path = pathlib.Path.cwd() / 'lab_color_transfered_out'
                 new_folder_path.mkdir(exist_ok=True)
 
-                transferred_lab_image = utils.color_transfer_on_single_image(image_path, self.lake_mean, self.lake_std,
-                                                                             new_folder_path)
+                utils.color_transfer_on_single_image(image_path, self.lake_mean, self.lake_std,
+                                                     new_folder_path)
 
                 images_processed += 1
                 pb['value'] = (images_processed / total_images) * 100
                 self.master.update()
-
-                # self.plot_figure(original_lab_image, transferred_lab_image)
 
             pb.stop()
             pb.destroy()
@@ -128,10 +124,39 @@ class ColorTransferApp:
         self.lab_folder_path = tkinter.filedialog.askdirectory(
             title='Select main folder of lab images for doing color transfer')
 
-        utils.color_transfer_on_image_list(self.lab_folder_path, self.lake_mean, self.lake_std, None)
+        image_paths = utils.get_image_list(self.lab_folder_path)
+        total_images = len(image_paths)
+        images_processed = 0
 
-        # Display message box to indicate the operation is complete
-        messagebox.showinfo("Operation Complete", "The operation is complete.")
+        if total_images >= 2:
+            pb = ttk.Progressbar(self.frame, orient='horizontal', mode='determinate', length=200)
+            pb.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+            pb.start()
+
+            for image_path in image_paths:
+                new_folder_path = pathlib.Path.cwd() / 'lab_color_transfered_out'
+                new_folder_path.mkdir(exist_ok=True)
+
+                utils.color_transfer_on_single_image(image_path, self.lake_mean, self.lake_std,
+                                                     new_folder_path)
+
+                images_processed += 1
+                pb['value'] = (images_processed / total_images) * 100
+                self.master.update()
+
+            pb.stop()
+            pb.destroy()
+
+            # # Display message box to indicate the operation is complete
+            # messagebox.showinfo("Operation Complete", "The operation is complete.")
+        else:
+            # Display error message box if there are not enough images in the folder
+            messagebox.showerror("Error", "There are not enough images in the folder.")
+
+        random_filename = random.sample(image_paths, 1)
+        original_lab_image = io.imread(random_filename[0])
+        transferred_lab_image = utils.color_transfer_on_image(random_filename[0], self.lake_mean, self.lake_std)
+        self.plot_figure(original_lab_image, transferred_lab_image)
 
 
 def main():
