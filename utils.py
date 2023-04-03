@@ -59,8 +59,8 @@ def load_lake_color_characteristics(excel_file_name):
     return lake_mean, lake_std
 
 
-def color_transfer_on_image(lab_image, lake_mean, lake_std):
-
+def color_transfer_on_image(labcam_image_path, lake_mean, lake_std):
+    lab_image = io.imread(labcam_image_path)
     # Calculate the mean and standard deviation of each channel in LAB color space for the input lab image
     lab_mean = color.rgb2lab(lab_image).mean(axis=(0, 1))
     lab_std = color.rgb2lab(lab_image).std(axis=(0, 1))
@@ -72,8 +72,37 @@ def color_transfer_on_image(lab_image, lake_mean, lake_std):
     return img_transfer
 
 
-def color_transfer_on_image_list(labcam_images_path, lake_mean, lake_std, output_directory):
+def color_transfer_on_single_image(labcam_image_path, lake_mean, lake_std, output_directory):
+    # Load the LAB image
+    lab_image = io.imread(labcam_image_path)
 
+    # Calculate the mean and standard deviation of each channel in LAB color space for the input lab image
+    lab_mean = color.rgb2lab(lab_image).mean(axis=(0, 1))
+    lab_std = color.rgb2lab(lab_image).std(axis=(0, 1))
+
+    # Compute the color transform from the lab image to the lake image
+    a = (lake_std / lab_std) * (color.rgb2lab(lab_image) - lab_mean) + lake_mean
+    img_transfer = color.lab2rgb(a)
+
+    # Get the file name from the lab_image_path
+    filename = os.path.basename(labcam_image_path)
+
+    # Save the result as a JPEG image in the output directory
+    output_path = os.path.join(output_directory, filename)
+    os.makedirs(output_directory, exist_ok=True)
+
+    # Convert the image to uint8
+    img_uint8 = skimage.img_as_ubyte(img_transfer)
+
+    # Save the uint8 image
+    imageio.imwrite(output_path, img_uint8)
+
+    # pb.stop()
+
+    return img_transfer
+
+
+def color_transfer_on_image_list(labcam_images_path, lake_mean, lake_std, output_directory):
     # Get lists of image file paths
     labcam_image_list = get_image_list(labcam_images_path)
 
@@ -82,7 +111,6 @@ def color_transfer_on_image_list(labcam_images_path, lake_mean, lake_std, output
 
     # Iterate over all the LAB images in the input directory
     for lab_image_path in labcam_image_list:
-
         # Load the LAB image
         lab_image = io.imread(lab_image_path)
 
@@ -110,41 +138,3 @@ def color_transfer_on_image_list(labcam_images_path, lake_mean, lake_std, output
         # io.imsave(output_path, img_transfer, quality=95)
 
     return
-
-
-
-
-#
-# lakecam_images_path = 'RGB color correction/lakecam'
-#
-# lake_mean, lake_std = get_lake_color_characterstics(lakecam_images_path)
-#
-# # Set the path to the image folder
-# image_folder = 'RGB color correction/labcam/1585731301/images/'
-#
-# # Get a list of all the image filenames in the folder
-# image_filenames = os.listdir(image_folder)
-#
-# # Select 5 random image filenames
-# random_filenames = random.sample(image_filenames, 5)
-#
-# # Create a subplot with 5 rows and 2 columns
-# fig, ax = plt.subplots(5, 2, figsize=(10, 20))
-#
-# # Iterate over the 5 random filenames and plot the original and transferred images side by side
-# for i, filename in enumerate(random_filenames):
-#     # Load the lab image
-#     lab_image = io.imread(os.path.join(image_folder, filename))
-#
-#     # Transfer the color characteristics of the lake image to the lab image
-#     transferred_image = color_transfer(lab_image, lake_mean, lake_std)
-#
-#     # Plot the original and transferred images side by side
-#     ax[i, 0].imshow(lab_image)
-#     ax[i, 0].set_title('Original Lab Image')
-#     ax[i, 1].imshow(transferred_image)
-#     ax[i, 1].set_title('Transferred Lab Image')
-#
-# # Adjust the spacing between the subplots and show the plot
-# plt.tight_layout()
-# plt.show()

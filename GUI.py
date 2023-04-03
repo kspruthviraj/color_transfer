@@ -67,6 +67,7 @@ class ColorTransferApp:
         # Display message box to indicate the operation is complete
         messagebox.showinfo("Operation Complete", "The operation is complete.")
 
+
 def main():
     root = tk.Tk()
     ColorTransferApp(root)
