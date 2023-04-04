@@ -1,4 +1,6 @@
-run script using the following command 
+## Color transfer from lake images to lab images
+
+Run script using the following command 
 
 ```python
 python GUI.py
@@ -21,3 +23,6 @@ The steps are as follows:
    1. Load the excel file that contains the lake image color characteristics.
    2. Load the path of the lab images that require color transfer.
    3. The transferred lab images are stored in the current directory.
+
+
+### Note: The standalone GUI script for Linux and Windows OS is under progress.
