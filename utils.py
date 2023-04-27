@@ -16,7 +16,7 @@ def get_image_list(root_path):
     return image_list
 
 
-def get_lake_color_characteristics(lakecam_images_path):
+def get_lake_color_characteristics_single(lakecam_images_path):
     # Get lists of image file paths
     lakecam_image_list = get_image_list(lakecam_images_path)
 
@@ -41,7 +41,34 @@ def get_lake_color_characteristics(lakecam_images_path):
     return lake_mean, lake_std
 
 
-def color_transfer_on_single_image(labcam_image_path, lake_mean, lake_std, output_directory):
+def get_lake_color_characteristics_overall(lakecam_images_path, labcam_images_path):
+    # Get lists of image file paths
+    lakecam_image_list = get_image_list(lakecam_images_path)
+    labcam_image_list = get_image_list(labcam_images_path)
+
+    # Load the set of images taken from the lake camera
+    lakecam_images = [io.imread(image_path) for image_path in lakecam_image_list]
+
+    # Load the set of images taken from the lab camera
+    labcam_images = [io.imread(image_path) for image_path in labcam_image_list]
+
+    # Calculate the mean and standard deviation of each channel in LAB color space for the lake images
+    lakecam_mean = np.mean([color.rgb2lab(img).mean(axis=(0, 1)) for img in lakecam_images], axis=0)
+    lakecam_std = np.mean([color.rgb2lab(img).std(axis=(0, 1)) for img in lakecam_images], axis=0)
+
+    # Calculate the mean and standard deviation of each channel in LAB color space for the lab images
+    labcam_mean = np.mean([color.rgb2lab(img).mean(axis=(0, 1)) for img in labcam_images], axis=0)
+    labcam_std = np.mean([color.rgb2lab(img).std(axis=(0, 1)) for img in labcam_images], axis=0)
+
+    # Compute the transfer function from the lab image to the lake image :(lake_std / lab_std) * (x - lab_mean) + lake_mean
+    # linear scaling operation
+
+    transfer_function = lambda x: (lakecam_std / labcam_std) * (x - labcam_mean) + lakecam_mean
+
+    return transfer_function
+
+
+def color_transfer_on_single_image_single(labcam_image_path, lake_mean, lake_std, output_directory):
     # Load the LAB image
     lab_image = io.imread(labcam_image_path)
 
@@ -69,6 +96,31 @@ def color_transfer_on_single_image(labcam_image_path, lake_mean, lake_std, outpu
     # pb.stop()
 
     return img_transfer
+
+
+def color_transfer_on_single_image_overall(labcam_image_path, transfer_function, output_directory):
+    # Load the LAB image
+    labcam_image = io.imread(labcam_image_path)
+
+    # Apply the transfer function to the LAB image
+    a = transfer_function(color.rgb2lab(labcam_image))
+    img_transfer = color.lab2rgb(a)
+
+    # Get the file name from the lab_image_path
+    filename = os.path.basename(labcam_image_path)
+
+    # Save the result as a JPEG image in the output directory
+    output_path = os.path.join(output_directory, filename)
+    os.makedirs(output_directory, exist_ok=True)
+
+    # Convert the image to uint8
+    img_uint8 = skimage.img_as_ubyte(img_transfer)
+
+    # Save the uint8 image
+    imageio.imwrite(output_path, img_uint8)
+
+    return img_transfer
+
 
 #
 # def color_transfer_on_single_image_2(labcam_image_path, lake_mean, lake_std, output_directory):
@@ -106,22 +158,22 @@ def color_transfer_on_single_image(labcam_image_path, lake_mean, lake_std, outpu
 #     return img_transfer
 
 
-def load_lake_color_characteristics(excel_file_name):
-    # Get the Excel file path
-    current_directory = os.getcwd()
-    excel_file_path = os.path.join(current_directory, excel_file_name)
-
-    # Load the Excel file as a pandas DataFrame, or return None if it doesn't exist
-    if not os.path.exists(excel_file_path):
-        print(f"Excel file '{excel_file_name}' doesn't exist in the current directory.")
-        return None
-    df = pd.read_excel(excel_file_path)
-
-    # Extract the lake mean and standard deviation from the DataFrame
-    lake_mean = df['lake_mean'].values
-    lake_std = df['lake_std'].values
-
-    return lake_mean, lake_std
+# def load_lake_color_characteristics(excel_file_name):
+#     # Get the Excel file path
+#     current_directory = os.getcwd()
+#     excel_file_path = os.path.join(current_directory, excel_file_name)
+#
+#     # Load the Excel file as a pandas DataFrame, or return None if it doesn't exist
+#     if not os.path.exists(excel_file_path):
+#         print(f"Excel file '{excel_file_name}' doesn't exist in the current directory.")
+#         return None
+#     df = pd.read_excel(excel_file_path)
+#
+#     # Extract the lake mean and standard deviation from the DataFrame
+#     lake_mean = df['lake_mean'].values
+#     lake_std = df['lake_std'].values
+#
+#     return lake_mean, lake_std
 
 
 def color_transfer_on_image(labcam_image_path, lake_mean, lake_std):
