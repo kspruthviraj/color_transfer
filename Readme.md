@@ -25,11 +25,6 @@ The steps are as follows:
    2. Load the path of the lab images that require color transfer.
    3. The transferred lab images are stored in the current directory.
 
-
-#### Example transferred color lab images:
-![Example_images](/example_images.png)
-
-
 #### Note: 
 The standalone GUI script for Linux and Windows OS is currently under development.
 
@@ -38,3 +33,7 @@ The standalone GUI script for Linux and Windows OS is currently under developmen
 ```python
 python main_CT.py lake_folder_path lab_folder_path outpath
 ```
+
+
+#### Example transferred color lab images:
+![Example_images](/example_images.png)
