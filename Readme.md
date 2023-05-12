@@ -1,6 +1,8 @@
 ## Color transfer from lake images to lab images
 
-Run script using the following command 
+You can run the script either using graphical user interface (GUI) or in python terminal. 
+
+##1) to open up GUI:
 
 ```python
 python GUI.py
@@ -28,8 +30,11 @@ The steps are as follows:
 ![Example_images](/example_images.png)
 
 
-
 #### Note: 
 The standalone GUI script for Linux and Windows OS is currently under development.
 
 
+##2) to run in python terminal:
+```python
+python main_CT.py lake_folder_path lab_folder_path outpath
+```
