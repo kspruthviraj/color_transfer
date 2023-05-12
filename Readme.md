@@ -33,7 +33,8 @@ The standalone GUI script for Linux and Windows OS is currently under developmen
 ```python
 python main_CT.py lake_folder_path lab_folder_path outpath
 ```
-
+#### Color transfer - before and after transfer
+![hist_color_transfer](/hist_color_transfer.PNG)
 
 #### Example transferred color lab images:
 ![Example_images](/example_images.png)
